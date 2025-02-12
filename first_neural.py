@@ -2,8 +2,7 @@ import random
 
 from functions import sigmoid_derivative, sigmoid
 
-
-class Neuron:
+class MyNeuron:
     def __init__(self, num_inputs):
         self.weights = [random.uniform(-1, 1) for _ in range(num_inputs)]
         self.bias = random.uniform(-1, 1)
@@ -24,13 +23,12 @@ training_data = {
     "AND": [([0, 0], 0), ([0, 1], 0), ([1, 0], 0), ([1, 1], 1)],
     "OR": [([0, 0], 0), ([0, 1], 1), ([1, 0], 1), ([1, 1], 1)],
     "NOT": [([0], 1), ([1], 0)],
-    "XOR": [([0, 0], 0), ([0, 1], 1), ([1, 0], 1), ([1, 1], 0)],
     "CUSTOM": [([0, 0, 0], 1), ([0, 1, 0], 1), ([1, 0, 0], 0), ([1, 1, 1], 1)]
 }
 
 def train_logical_function(func_name):
     num_inputs = len(training_data[func_name][0][0])
-    neuron = Neuron(num_inputs)
+    neuron = MyNeuron(num_inputs)
     for _ in range(10000):
         for inputs, expected in training_data[func_name]:
             neuron.train(inputs, expected)

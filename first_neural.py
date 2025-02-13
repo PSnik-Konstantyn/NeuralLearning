@@ -1,6 +1,6 @@
 import random
 
-from functions import sigmoid_derivative, sigmoid
+from math_functions import sigmoid_derivative, sigmoid
 
 class MyNeuron:
     def __init__(self, num_inputs):

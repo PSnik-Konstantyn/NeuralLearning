@@ -1,7 +1,6 @@
 import random
 
-from functions import sigmoid, sigmoid_derivative
-
+from math_functions import sigmoid, sigmoid_derivative
 
 class Neuron:
     def __init__(self, num_inputs):
@@ -22,7 +21,7 @@ class MLP:
     def __init__(self, num_inputs, num_hidden):
         self.hidden_layer = [Neuron(num_inputs) for _ in range(num_hidden)]
         self.output_neuron = Neuron(num_hidden)
-        self.learning_rate = 0.5
+        self.learning_rate = 0.1
 
     def feedforward(self, inputs):
         hidden_outputs = [neuron.feedforward(inputs) for neuron in self.hidden_layer]

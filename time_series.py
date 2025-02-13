@@ -1,5 +1,11 @@
+import math
 import random
-from math_functions import sigmoid, sigmoid_derivative
+
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
 
 def normalize(data, min_val, max_val):
     return [(x - min_val) / (max_val - min_val) for x in data]
@@ -7,14 +13,18 @@ def normalize(data, min_val, max_val):
 def denormalize(value, min_val, max_val):
     return value * (max_val - min_val) + min_val
 
-raw_data = [1.59, 5.73, 0.48, 5.28, 1.35, 5.91, 0.77, 5.25, 1.37, 4.42, 0.26, 4.21, 1.90]
-test_input = [4.21, 1.90, 4.08]
-expected_output = 1.40
+raw_data = [0.79, 3.84, 0.92, 4.50, 0.96, 5.51, 1.14, 5.32, 0.39, 4.99, 1.36, 5.81, 1.90]
+test_inputs = [
+    [4.99, 1.36, 5.81],
+    [1.36, 5.81, 1.90],
+    [5.81, 1.90, 4.79]
+]
+expected_outputs = [4.79, 1.41]
 
-min_val, max_val = min(raw_data + test_input + [expected_output]), max(raw_data + test_input + [expected_output])
+min_val, max_val = min(raw_data + sum(test_inputs, []) + expected_outputs), max(raw_data + sum(test_inputs, []) + expected_outputs)
 data = normalize(raw_data, min_val, max_val)
-test_input = normalize(test_input, min_val, max_val)
-expected_output = normalize([expected_output], min_val, max_val)[0]
+test_inputs = [normalize(inp, min_val, max_val) for inp in test_inputs]
+expected_outputs = normalize(expected_outputs, min_val, max_val)
 
 train_x = [data[i:i + 3] for i in range(len(data) - 3)]
 train_y = [data[i + 3] for i in range(len(data) - 3)]
@@ -27,8 +37,8 @@ b_hidden = [random.uniform(-1, 1) for _ in range(3)]
 b_output = random.uniform(-1, 1)
 
 learning_rate = 0.01
-max_iterations = 10000000
-tolerance = 0.01
+max_iterations = 1000000
+tolerance = 0.0001
 
 for epoch in range(max_iterations):
     total_error = 0
@@ -68,8 +78,8 @@ for epoch in range(max_iterations):
         print(f"Навчання завершено на {epoch} ітерації")
         break
 
-hidden_activations = [sigmoid(sum(test_input[k] * w_input_hidden[j][k] for k in range(3)) + b_hidden[j]) for j in range(3)]
-test_prediction = sigmoid(sum(hidden_activations[j] * w_hidden_output[j] for j in range(3)) + b_output)
-
-denormalized_prediction = denormalize(test_prediction, min_val, max_val)
-print(f"Прогнозоване значення x15: {denormalized_prediction}")
+for i, test_input in enumerate(test_inputs):
+    hidden_activations = [sigmoid(sum(test_input[k] * w_input_hidden[j][k] for k in range(3)) + b_hidden[j]) for j in range(3)]
+    test_prediction = sigmoid(sum(hidden_activations[j] * w_hidden_output[j] for j in range(3)) + b_output)
+    denormalized_prediction = denormalize(test_prediction, min_val, max_val)
+    print(f"Прогнозоване значення x{i+13}: {denormalized_prediction}")

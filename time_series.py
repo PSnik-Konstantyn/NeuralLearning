@@ -1,11 +1,8 @@
 import math
 import random
 
-def sigmoid(x):
-    return 1 / (1 + math.exp(-x))
+from math_functions import sigmoid, sigmoid_derivative
 
-def sigmoid_derivative(x):
-    return x * (1 - x)
 
 def normalize(data, min_val, max_val):
     return [(x - min_val) / (max_val - min_val) for x in data]
@@ -21,7 +18,9 @@ test_inputs = [
 ]
 expected_outputs = [4.79, 1.41]
 
-min_val, max_val = min(raw_data + sum(test_inputs, []) + expected_outputs), max(raw_data + sum(test_inputs, []) + expected_outputs)
+min_val = 0.39
+max_val = 5.81
+
 data = normalize(raw_data, min_val, max_val)
 test_inputs = [normalize(inp, min_val, max_val) for inp in test_inputs]
 expected_outputs = normalize(expected_outputs, min_val, max_val)
@@ -36,7 +35,7 @@ w_hidden_output = [random.uniform(-1, 1) for _ in range(3)]
 b_hidden = [random.uniform(-1, 1) for _ in range(3)]
 b_output = random.uniform(-1, 1)
 
-learning_rate = 0.01
+learning_rate = 0.001
 max_iterations = 1000000
 tolerance = 0.0001
 

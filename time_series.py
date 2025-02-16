@@ -2,14 +2,11 @@ import random
 
 from math_functions import sigmoid, sigmoid_derivative
 
-
 def normalize(data, min_val, max_val):
     return [(x - min_val) / (max_val - min_val) if max_val - min_val != 0 else 0 for x in data]
 
-
 def denormalize(value, min_val, max_val):
     return value * (max_val - min_val) + min_val
-
 
 raw_data = [0.79, 3.84, 0.92, 4.50, 0.96, 5.51, 1.14, 5.32, 0.39, 4.99, 1.36, 5.81, 1.90, 4.79, 1.41]
 test_inputs = [
@@ -17,7 +14,7 @@ test_inputs = [
     [1.36, 5.81, 1.90],
     [5.81, 1.90, 4.79]
 ]
-expected_outputs = [4.79, 1.41]
+expected_outputs = [1.90, 4.79, 1.41]
 
 min_val, max_val = min(raw_data), max(raw_data)
 data = normalize(raw_data, min_val, max_val)
@@ -35,7 +32,7 @@ b_output = random.uniform(-0.1, 0.1)
 
 learning_rate = 0.1
 max_iterations = 2500000
-tolerance = 1e-6
+tolerance = 0.0001
 
 for epoch in range(max_iterations):
     total_error = 0
@@ -63,6 +60,7 @@ for epoch in range(max_iterations):
         print(f"Epoch {epoch}, MSE: {total_error / len(train_x):.6f}")
 
     if total_error / len(train_x) < tolerance:
+        print("We made it")
         break
 
 total_test_error = 0

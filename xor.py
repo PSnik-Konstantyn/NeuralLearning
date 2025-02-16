@@ -22,6 +22,7 @@ for epoch in range(max_iterations):
         inputs = train_x[i]
         expected_output = train_y[i]
 
+        #feedforward
         hidden_activations = [sigmoid(sum(inputs[k] * w_input_hidden[j][k] for k in range(2)) + b_hidden[j]) for j in
                               range(2)]
         output = sigmoid(sum(hidden_activations[j] * w_hidden_output[j] for j in range(2)) + b_output)
@@ -43,8 +44,8 @@ for epoch in range(max_iterations):
         break
 
 
-def test_network(function_name, test_data, expected_results):
-    print(f"Testing {function_name} function:")
+def test_network(test_data, expected_results):
+    print(f"Testing XOR function:")
     for i, inputs in enumerate(test_data):
         hidden_activations = [sigmoid(sum(inputs[k] * w_input_hidden[j][k] for k in range(len(inputs))) + b_hidden[j])
                               for j in range(2)]
@@ -53,5 +54,5 @@ def test_network(function_name, test_data, expected_results):
     print()
 
 
-test_network("XOR", train_x, train_y)
+test_network(train_x, train_y)
 

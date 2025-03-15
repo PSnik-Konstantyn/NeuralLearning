@@ -3,17 +3,7 @@ import cv2
 import os
 import pickle
 
-
-def relu(x):
-    return np.maximum(0, x)
-
-def relu_derivative(x):
-    return (x > 0).astype(float)
-
-
-def softmax(x):
-    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+from math_functions import relu, softmax, relu_derivative
 
 
 def load_dataset(dataset_path):
@@ -28,6 +18,13 @@ def load_dataset(dataset_path):
             images.append(img)
             labels.append(label)
     return np.array(images), np.array(labels), classes
+
+
+def compute_confusion_matrix(y_true, y_pred, num_classes):
+    matrix = np.zeros((num_classes, num_classes), dtype=int)
+    for true_label, pred_label in zip(y_true, y_pred):
+        matrix[true_label][pred_label] += 1
+    return matrix
 
 
 def train_network(dataset_path, model_filename):
@@ -86,10 +83,16 @@ def train_network(dataset_path, model_filename):
 
         if epoch % 100 == 0:
             print(f"Epoch {epoch}, Loss: {total_loss / len(X):.6f}")
+        # if total_loss <= 0.0004:
+        #     break
 
     predictions = np.argmax(softmax(np.dot(relu(np.dot(relu(np.dot(X, w1) + b1), w2) + b2), w3) + b3), axis=1)
     accuracy = np.mean(predictions == y)
     print(f"Final Training Accuracy: {accuracy:.4f}")
+
+    confusion_matrix = compute_confusion_matrix(y, predictions, len(classes))
+    print("Confusion Matrix:")
+    print(confusion_matrix)
 
     model = {'w1': w1, 'w2': w2, 'w3': w3, 'b1': b1, 'b2': b2, 'b3': b3, 'classes': classes}
     with open(model_filename, 'wb') as f:

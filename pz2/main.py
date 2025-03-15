@@ -1,10 +1,20 @@
-import random
 import numpy as np
 import cv2
 import os
 import pickle
 
-from math_functions import sigmoid, sigmoid_derivative
+
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return (x > 0).astype(float)
+
+
+def softmax(x):
+    exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+    return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
 
 def load_dataset(dataset_path):
     classes = ['daisy', 'tulip', 'rose', 'sunflower', 'dandelion']
@@ -26,51 +36,65 @@ def train_network(dataset_path, model_filename):
     y_one_hot[np.arange(y.size), y] = 1
 
     input_nodes = 1024
-    hidden_nodes = 64
+    hidden_nodes1 = 256
+    hidden_nodes2 = 128
     output_nodes = len(classes)
-    learning_rate = 0.1
-    max_iterations = 1000
-    tolerance = 0.0001
+    learning_rate = 0.001
+    max_iterations = 2000
+    batch_size = 32
 
-    w_input_hidden = np.random.uniform(-0.5, 0.5, (input_nodes, hidden_nodes))
-    w_hidden_output = np.random.uniform(-0.5, 0.5, (hidden_nodes, output_nodes))
-    b_hidden = np.random.uniform(-0.1, 0.1, (1, hidden_nodes))
-    b_output = np.random.uniform(-0.1, 0.1, (1, output_nodes))
+    w1 = np.random.randn(input_nodes, hidden_nodes1) * np.sqrt(2 / input_nodes)
+    w2 = np.random.randn(hidden_nodes1, hidden_nodes2) * np.sqrt(2 / hidden_nodes1)
+    w3 = np.random.randn(hidden_nodes2, output_nodes) * np.sqrt(2 / hidden_nodes2)
+    b1 = np.zeros((1, hidden_nodes1))
+    b2 = np.zeros((1, hidden_nodes2))
+    b3 = np.zeros((1, output_nodes))
 
     for epoch in range(max_iterations):
-        total_error = 0
-        for i in range(len(X)):
-            inputs, expected = X[i].reshape(1, -1), y_one_hot[i].reshape(1, -1)
+        indices = np.random.permutation(len(X))
+        X, y_one_hot = X[indices], y_one_hot[indices]
+        total_loss = 0
 
-            hidden_input = np.dot(inputs, w_input_hidden) + b_hidden
-            hidden_output = sigmoid(hidden_input)
-            final_input = np.dot(hidden_output, w_hidden_output) + b_output
-            final_output = sigmoid(final_input)
+        for i in range(0, len(X), batch_size):
+            X_batch = X[i:i + batch_size]
+            y_batch = y_one_hot[i:i + batch_size]
 
-            error = expected - final_output
-            total_error += np.sum(error ** 2)
+            h1 = relu(np.dot(X_batch, w1) + b1)
+            h2 = relu(np.dot(h1, w2) + b2)
+            output = softmax(np.dot(h2, w3) + b3)
 
-            delta_output = error * sigmoid_derivative(final_output)
-            delta_hidden = np.dot(delta_output, w_hidden_output.T) * sigmoid_derivative(hidden_output)
+            error = output - y_batch
+            total_loss += np.mean(np.sum(error ** 2, axis=1))
 
-            w_hidden_output += learning_rate * np.dot(hidden_output.T, delta_output)
-            w_input_hidden += learning_rate * np.dot(inputs.T, delta_hidden)
+            d_w3 = np.dot(h2.T, error)
+            d_b3 = np.sum(error, axis=0, keepdims=True)
 
-            b_output += learning_rate * np.sum(delta_output, axis=0, keepdims=True)
-            b_hidden += learning_rate * np.sum(delta_hidden, axis=0, keepdims=True)
+            d_h2 = np.dot(error, w3.T) * relu_derivative(h2)
+            d_w2 = np.dot(h1.T, d_h2)
+            d_b2 = np.sum(d_h2, axis=0, keepdims=True)
+
+            d_h1 = np.dot(d_h2, w2.T) * relu_derivative(h1)
+            d_w1 = np.dot(X_batch.T, d_h1)
+            d_b1 = np.sum(d_h1, axis=0, keepdims=True)
+
+            w1 -= learning_rate * d_w1
+            w2 -= learning_rate * d_w2
+            w3 -= learning_rate * d_w3
+            b1 -= learning_rate * d_b1
+            b2 -= learning_rate * d_b2
+            b3 -= learning_rate * d_b3
 
         if epoch % 100 == 0:
-            print(f"Epoch {epoch}, MSE: {total_error / len(X):.6f}")
+            print(f"Epoch {epoch}, Loss: {total_loss / len(X):.6f}")
 
-        if total_error / len(X) < tolerance:
-            print("Training complete")
-            break
+    predictions = np.argmax(softmax(np.dot(relu(np.dot(relu(np.dot(X, w1) + b1), w2) + b2), w3) + b3), axis=1)
+    accuracy = np.mean(predictions == y)
+    print(f"Final Training Accuracy: {accuracy:.4f}")
 
-    model = {'w_input_hidden': w_input_hidden, 'w_hidden_output': w_hidden_output, 'b_hidden': b_hidden,
-             'b_output': b_output, 'classes': classes}
+    model = {'w1': w1, 'w2': w2, 'w3': w3, 'b1': b1, 'b2': b2, 'b3': b3, 'classes': classes}
     with open(model_filename, 'wb') as f:
         pickle.dump(model, f)
-    print('Model saved')
+    print("Model saved")
 
 
 def classify_image(model_filename):
@@ -81,19 +105,22 @@ def classify_image(model_filename):
     img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, (32, 32)).flatten() / 255.0
 
-    hidden_input = np.dot(img.reshape(1, -1), model['w_input_hidden']) + model['b_hidden']
-    hidden_output = sigmoid(hidden_input)
-    final_input = np.dot(hidden_output, model['w_hidden_output']) + model['b_output']
-    final_output = sigmoid(final_input)
+    h1 = relu(np.dot(img.reshape(1, -1), model['w1']) + model['b1'])
+    h2 = relu(np.dot(h1, model['w2']) + model['b2'])
+    output = softmax(np.dot(h2, model['w3']) + model['b3'])
 
-    class_index = np.argmax(final_output)
+    class_index = np.argmax(output)
     print(f'This flower is: {model["classes"][class_index]}')
 
 
 if __name__ == "__main__":
-    dataset_path = '/NeuralLearning/flowers'
+    dataset_path = '/home/kostiantyn/PycharmProjects/NeuralLearning/flowers'
     model_filename = 'flower_model.pkl'
-    print("start")
-    train_network(dataset_path, model_filename)
-    print("clasiffy")
+
+    if os.path.exists(model_filename):
+        print("Model found. Skipping training...")
+    else:
+        print("No saved model found. Training model...")
+        train_network(dataset_path, model_filename)
+
     classify_image(model_filename)

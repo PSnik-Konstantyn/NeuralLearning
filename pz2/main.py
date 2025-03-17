@@ -5,7 +5,6 @@ import pickle
 
 from math_functions import relu, softmax, relu_derivative
 
-
 def load_dataset(dataset_path):
     classes = ['daisy', 'tulip', 'rose', 'sunflower', 'dandelion']
     images, labels = [], []
@@ -111,7 +110,8 @@ def classify_image(model_filename):
     h1 = relu(np.dot(img.reshape(1, -1), model['w1']) + model['b1'])
     h2 = relu(np.dot(h1, model['w2']) + model['b2'])
     output = softmax(np.dot(h2, model['w3']) + model['b3'])
-
+    print(model["classes"])
+    print(output)
     class_index = np.argmax(output)
     print(f'This flower is: {model["classes"][class_index]}')
 

@@ -17,3 +17,7 @@ def relu_derivative(x):
 def softmax(x):
     exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+
+def objective_function(x):
+    return 5 * np.sin(1/x) * (np.cos(x**2 + 1/x))**2
+

@@ -32,18 +32,18 @@ def crossover(parents, offspring_size):
 def mutate(offspring, mutation_rate, bounds):
     for i in range(len(offspring)):
         if random.random() < mutation_rate:
-            offspring[i] += random.uniform(-0.1, 0.1)  # Small mutation
+            offspring[i] += random.uniform(-0.1, 0.1)
             offspring[i] = np.clip(offspring[i], bounds[0], bounds[1])
     return offspring
 
 
 def genetic_algorithm(bounds, objective_fn, maximize=True, pop_size=120, generations=100, mutation_rate=0.1,
-                      elitism=0.1):
+                      elitism=0.1, patience=3):
     population = initialize_population(pop_size, bounds)
     best_solution = None
     best_value = -np.inf if maximize else np.inf
-
     elite_size = int(pop_size * elitism)
+    no_improve_count = 0
 
     for generation in range(generations):
         fitness = np.array(evaluate_population(population, objective_fn))
@@ -59,6 +59,13 @@ def genetic_algorithm(bounds, objective_fn, maximize=True, pop_size=120, generat
                 not maximize and fitness[sorted_indices[0]] < best_value):
             best_value = fitness[sorted_indices[0]]
             best_solution = population[sorted_indices[0]]
+            no_improve_count = 0
+        else:
+            no_improve_count += 1
+
+        if no_improve_count >= patience:
+            print(f'Алгоритм зупинився на поколінні {generation + 1} через відсутність покращень.')
+            break
 
         parents = select_parents(population, fitness, num_parents=pop_size // 2)
         offspring = crossover(parents, offspring_size=pop_size - len(elites))

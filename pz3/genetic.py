@@ -4,21 +4,11 @@ import random
 
 from math_functions import objective_function
 
-
-def initialize_population(size, bounds):
-    return [random.uniform(bounds[0], bounds[1]) for _ in range(size)]
-
-
-def evaluate_population(population, objective_fn):
-    return [objective_fn(x) for x in population]
-
-
 def select_parents(population, fitness, num_parents):
     probabilities = np.exp(fitness - np.max(fitness))
     probabilities /= probabilities.sum()
     selected = np.random.choice(population, size=num_parents, p=probabilities, replace=False)
     return selected.tolist()
-
 
 def crossover(parents, offspring_size):
     offspring = []
@@ -39,14 +29,14 @@ def mutate(offspring, mutation_rate, bounds):
 
 def genetic_algorithm(bounds, objective_fn, maximize=True, pop_size=120, generations=100, mutation_rate=0.1,
                       elitism=0.1, patience=3):
-    population = initialize_population(pop_size, bounds)
+    population = [random.uniform(bounds[0], bounds[1]) for _ in range(pop_size)]
     best_solution = None
     best_value = -np.inf if maximize else np.inf
     elite_size = int(pop_size * elitism)
     no_improve_count = 0
 
     for generation in range(generations):
-        fitness = np.array(evaluate_population(population, objective_fn))
+        fitness = np.array([objective_fn(x) for x in population])
 
         if not maximize:
             sorted_indices = np.argsort(fitness)

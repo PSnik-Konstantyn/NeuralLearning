@@ -27,8 +27,9 @@ def mutate(offspring, mutation_rate, bounds):
     return offspring
 
 
-def genetic_algorithm(bounds, objective_fn, maximize=True, pop_size=120, generations=100, mutation_rate=0.1,
-                      elitism=0.1, patience=3):
+def genetic_algorithm(bounds, objective_fn, maximize=True, pop_size=120, generations=100,
+                      mutation_rate=0.1,elitism=0.1, patience=3):
+
     population = [random.uniform(bounds[0], bounds[1]) for _ in range(pop_size)]
     best_solution = None
     best_value = -np.inf if maximize else np.inf
